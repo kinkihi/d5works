@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import type { PageId } from "@/app/page";
 
 function StarIcon() {
   return (
@@ -259,7 +260,12 @@ function HelpPopup({ onClose }: { onClose: () => void }) {
   );
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  activePage: PageId;
+  onPageChange: (page: PageId) => void;
+}
+
+export default function Sidebar({ activePage, onPageChange }: SidebarProps) {
   const [showHelp, setShowHelp] = useState(false);
 
   return (
@@ -274,8 +280,8 @@ export default function Sidebar() {
               </span>
             </div>
           </div>
-          <MenuItem icon={<StarIcon />} label="Favorites" />
-          <MenuItem icon={<BagIcon />} label="Purchased" />
+          <MenuItem icon={<StarIcon />} label="Favorites" active={activePage === "favorites"} onClick={() => onPageChange("favorites")} />
+          <MenuItem icon={<BagIcon />} label="Purchased" active={activePage === "purchased"} onClick={() => onPageChange("purchased")} />
         </div>
 
         {/* Creator */}
@@ -287,8 +293,8 @@ export default function Sidebar() {
               </span>
             </div>
           </div>
-          <MenuItem icon={<CubeIcon />} label="Uploaded" />
-          <MenuItem icon={<DollarIcon />} label="Income" active />
+          <MenuItem icon={<CubeIcon />} label="Uploaded" active={activePage === "uploaded"} onClick={() => onPageChange("uploaded")} />
+          <MenuItem icon={<DollarIcon />} label="Income" active={activePage === "income"} onClick={() => onPageChange("income")} />
         </div>
       </div>
 

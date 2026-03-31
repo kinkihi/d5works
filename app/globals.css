@@ -119,6 +119,7 @@
 @theme inline {
     --color-positive: oklch(0.55 0.17 155);
     --color-grape: oklch(0.85 0.08 290 / 10%);
+    --color-grape-accent: oklch(0.52 0.30 290);
     --color-mikado: oklch(0.82 0.16 85);
 }
 
@@ -137,4 +138,5 @@
 .dark {
     --color-positive: oklch(0.72 0.17 155);
     --color-grape: oklch(0.4 0.12 290 / 15%);
+    --color-grape-accent: oklch(0.55 0.30 290);
 }

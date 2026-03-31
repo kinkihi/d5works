@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import type { PageId } from "@/app/page";
 
 function D5Logo() {
   return (
@@ -96,8 +97,27 @@ function NavMenuItem({ icon, label }: NavMenuItemProps) {
   );
 }
 
+function ChevronDownSmallIcon({ className }: { className?: string }) {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={className}>
+      <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function LegalLink({ label }: { label: string }) {
+  return (
+    <button className="flex items-center p-1 rounded-sm cursor-pointer hover:bg-accent transition-colors">
+      <span className="text-xs font-medium text-muted-foreground leading-4 whitespace-nowrap px-1">
+        {label}
+      </span>
+    </button>
+  );
+}
+
 function NavigationMenu({ onClose }: { onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [legalExpanded, setLegalExpanded] = useState(false);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -112,9 +132,9 @@ function NavigationMenu({ onClose }: { onClose: () => void }) {
   return (
     <div
       ref={ref}
-      className="absolute left-0 top-full mt-1 w-[480px] bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50"
+      className="absolute left-0 top-full mt-1 w-[520px] bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50"
     >
-      <div className="flex h-[150px]">
+      <div className="flex h-[130px]">
         {/* Left column */}
         <div className="flex flex-col w-[320px] border-r border-border">
           <div className="flex flex-col p-2 border-b border-border">
@@ -126,19 +146,37 @@ function NavigationMenu({ onClose }: { onClose: () => void }) {
           </div>
         </div>
         {/* Right column */}
-        <div className="flex flex-1 flex-col gap-0.5 p-2">
+        <div className="flex flex-col gap-0.5 w-[200px] p-2">
           <NavMenuItem icon={<NavLifebuoyIcon />} label="Help Center" />
           <NavMenuItem icon={<NavHeadsetIcon />} label="Get Support" />
           <NavMenuItem icon={<NavMailIcon />} label="Contact Us" />
-          <button className="flex items-center h-8 w-full px-2 py-2 rounded-sm cursor-pointer">
+        </div>
+      </div>
+      {/* Legal Provisions */}
+      <div className="flex flex-col p-2 border-t border-border">
+        <button
+          onClick={() => setLegalExpanded((prev) => !prev)}
+          className="flex items-center h-8 px-1 py-2 rounded-sm cursor-pointer hover:bg-accent transition-colors"
+        >
+          <div className="flex items-center p-1">
             <span className="text-xs font-medium text-muted-foreground leading-4 whitespace-nowrap">
               Legal Provisions
             </span>
-            <div className="flex items-center justify-center ml-0.5">
-              <ChevronRightSmallIcon />
-            </div>
-          </button>
-        </div>
+          </div>
+          <div className="flex items-center justify-center w-2">
+            <ChevronDownSmallIcon
+              className={`text-muted-foreground transition-transform duration-200 ${legalExpanded ? "rotate-180" : ""}`}
+            />
+          </div>
+        </button>
+        {legalExpanded && (
+          <div className="flex items-start gap-0.5 w-full">
+            <LegalLink label="Privacy" />
+            <LegalLink label="Service Agreement" />
+            <LegalLink label="License" />
+            <LegalLink label="Content Policy" />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -272,7 +310,7 @@ function ThemeSubmenu() {
   );
 }
 
-function AvatarDropdown({ onClose }: { onClose: () => void }) {
+function AvatarDropdown({ onClose, onPageChange }: { onClose: () => void; onPageChange: (page: PageId) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [showTheme, setShowTheme] = useState(false);
 
@@ -323,14 +361,14 @@ function AvatarDropdown({ onClose }: { onClose: () => void }) {
 
       {/* Favorites, Purchased */}
       <div className="flex flex-col gap-0.5 p-1 border-b border-border">
-        <DropdownItem label="Favorites" />
-        <DropdownItem label="Purchased" />
+        <DropdownItem label="Favorites" onClick={() => { onPageChange("favorites"); onClose(); }} />
+        <DropdownItem label="Purchased" onClick={() => { onPageChange("purchased"); onClose(); }} />
       </div>
 
       {/* Uploaded, Income */}
       <div className="flex flex-col gap-0.5 p-1 border-b border-border">
-        <DropdownItem label="Uploaded" />
-        <DropdownItem label="Income" />
+        <DropdownItem label="Uploaded" onClick={() => { onPageChange("uploaded"); onClose(); }} />
+        <DropdownItem label="Income" onClick={() => { onPageChange("income"); onClose(); }} />
       </div>
 
       {/* Settings */}
@@ -361,7 +399,13 @@ function AvatarDropdown({ onClose }: { onClose: () => void }) {
   );
 }
 
-export default function TopNav() {
+interface TopNavProps {
+  activePage: PageId;
+  onPageChange: (page: PageId) => void;
+  onUploadClick?: () => void;
+}
+
+export default function TopNav({ activePage, onPageChange, onUploadClick }: TopNavProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNavMenu, setShowNavMenu] = useState(false);
   const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -377,25 +421,30 @@ export default function TopNav() {
   return (
     <header className="flex items-center justify-between h-14 lg:h-16 px-2 bg-background border-b border-border shrink-0">
       {/* Left: Logo + Brand */}
-      <div
-        className="relative flex items-center h-full cursor-pointer p-1 shrink-0"
-        onMouseEnter={handleNavEnter}
-        onMouseLeave={handleNavLeave}
-      >
-        <div className="flex items-center justify-center w-10 h-10 p-2 rounded">
-          <D5Logo />
-        </div>
+      <div className="flex items-center h-full shrink-0 gap-1">
         <button
-          className={`flex items-center h-full px-2 py-1 rounded-md outline-none transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 ${showNavMenu ? "bg-accent/50 text-accent-foreground" : ""}`}
+          onClick={() => window.location.reload()}
+          className="flex items-center justify-center w-10 h-10 p-2 rounded-md hover:bg-accent transition-colors"
         >
-          <span className="text-[13px] font-semibold leading-4 text-center whitespace-nowrap">
-            D5 WORKS
-          </span>
-          <svg className={`ml-1 transition-transform duration-200 ${showNavMenu ? "rotate-180" : ""}`} width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M3 5L6 8L9 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <D5Logo />
         </button>
-        {showNavMenu && <NavigationMenu onClose={() => setShowNavMenu(false)} />}
+        <div
+          className="relative flex items-center h-full"
+          onMouseEnter={handleNavEnter}
+          onMouseLeave={handleNavLeave}
+        >
+          <button
+            className={`flex items-center w-fit h-10 px-3 py-1 rounded-md outline-none transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 ${showNavMenu ? "bg-accent/50 text-accent-foreground" : ""}`}
+          >
+            <span className="text-[13px] font-semibold leading-4 text-center whitespace-nowrap">
+              D5 WORKS
+            </span>
+            <svg className={`ml-1 transition-transform duration-200 ${showNavMenu ? "rotate-180" : ""}`} width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M3 5L6 8L9 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          {showNavMenu && <NavigationMenu onClose={() => setShowNavMenu(false)} />}
+        </div>
       </div>
 
       {/* Mid: Search */}
@@ -415,7 +464,10 @@ export default function TopNav() {
 
       {/* Right: Upload + Avatar */}
       <div className="flex items-center gap-2 lg:gap-4 h-full px-2 shrink-0">
-        <button className="flex items-center justify-center h-8 lg:h-10 px-3 lg:px-4 bg-primary rounded-md text-primary-foreground text-xs lg:text-sm font-semibold leading-none whitespace-nowrap">
+        <button
+          onClick={onUploadClick}
+          className="flex items-center justify-center h-8 lg:h-10 px-3 lg:px-4 bg-primary rounded-md text-primary-foreground text-xs lg:text-sm font-semibold leading-none whitespace-nowrap"
+        >
           Upload
         </button>
         <div className="relative">
@@ -430,7 +482,7 @@ export default function TopNav() {
             </div>
           </button>
           {showDropdown && (
-            <AvatarDropdown onClose={() => setShowDropdown(false)} />
+            <AvatarDropdown onClose={() => setShowDropdown(false)} onPageChange={onPageChange} />
           )}
         </div>
       </div>
