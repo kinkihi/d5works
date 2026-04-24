@@ -780,7 +780,7 @@ export default function UploadedContent() {
             <div className="relative">
               <button
                 onClick={() => setSortOpen(!sortOpen)}
-                className="flex items-center gap-0.5 h-8 px-2 py-1 border border-border rounded text-[13px] leading-4 whitespace-nowrap hover:bg-accent active:bg-accent/80 transition-colors"
+                className="flex items-center gap-0.5 h-8 min-w-[127px] px-2 py-1 border border-border rounded text-[13px] leading-4 whitespace-nowrap hover:bg-accent active:bg-accent/80 transition-colors"
               >
                 <span className="text-muted-foreground">Sort by:</span>
                 <span className="font-semibold text-foreground"> {sortFieldLabels[sortField]}</span>
