@@ -246,6 +246,231 @@ function RowDropdown({
   );
 }
 
+type FilterFormat = "all" | ".d5a" | ".skp" | ".fbx" | ".obj" | ".max";
+type FilterPricing = "all" | "free" | "paid";
+type FilterStatus = "all" | ModelState;
+
+const FILTER_FORMATS: FilterFormat[] = ["all", ".skp", ".fbx", ".obj", ".max", ".d5a"];
+const FILTER_PRICING: FilterPricing[] = ["all", "free", "paid"];
+const FILTER_STATUSES: FilterStatus[] = ["all", "draft", "pending", "rejected", "published", "unpublished", "suppressed"];
+
+const filterStatusLabels: Record<FilterStatus, string> = {
+  all: "All",
+  draft: "Draft",
+  pending: "Pending",
+  rejected: "Rejected",
+  published: "Published",
+  unpublished: "Unpublished",
+  suppressed: "Suppressed",
+};
+
+function FilterChip({
+  label,
+  selected,
+  onClick,
+}: {
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center px-2 py-1 rounded-lg text-[13px] font-medium leading-4 whitespace-nowrap transition-colors ${
+        selected
+          ? "bg-grape-accent/10 border border-grape-accent text-grape-accent"
+          : "border border-black/10 dark:border-white/10 text-foreground hover:border-black/20 dark:hover:border-white/20"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function FilterCloseIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function FilterDropdown({
+  formatFilter,
+  pricingFilter,
+  statusFilter,
+  onFormatChange,
+  onPricingChange,
+  onStatusChange,
+  onReset,
+  onClose,
+}: {
+  formatFilter: FilterFormat;
+  pricingFilter: FilterPricing;
+  statusFilter: FilterStatus;
+  onFormatChange: (v: FilterFormat) => void;
+  onPricingChange: (v: FilterPricing) => void;
+  onStatusChange: (v: FilterStatus) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      className="absolute left-0 top-full mt-1 z-50 w-[320px] bg-popover border border-border rounded-lg shadow-lg animate-in fade-in slide-in-from-top-1 duration-150 overflow-hidden"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between h-10 px-4 border-b border-border backdrop-blur-[50px]">
+        <span className="text-[13px] font-medium text-foreground leading-5">Filter</span>
+        <button
+          onClick={onClose}
+          className="flex items-center justify-center w-6 h-6 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        >
+          <FilterCloseIcon />
+        </button>
+      </div>
+
+      {/* Formats */}
+      <div className="flex flex-col gap-2 px-4 pt-2 pb-4 border-b border-border">
+        <span className="text-sm font-medium text-foreground leading-4">Formats</span>
+        <div className="flex flex-wrap gap-2">
+          {FILTER_FORMATS.map((fmt) => (
+            <FilterChip
+              key={fmt}
+              label={fmt === "all" ? "All" : fmt}
+              selected={formatFilter === fmt}
+              onClick={() => onFormatChange(fmt)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Pricing */}
+      <div className="flex flex-col gap-2 px-4 py-4 border-b border-border">
+        <span className="text-[13px] font-medium text-foreground leading-4">Pricing</span>
+        <div className="flex flex-wrap gap-2">
+          {FILTER_PRICING.map((p) => (
+            <FilterChip
+              key={p}
+              label={p === "all" ? "All" : p === "free" ? "Free" : "Paid"}
+              selected={pricingFilter === p}
+              onClick={() => onPricingChange(p)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Status */}
+      <div className="flex flex-col gap-2 px-4 py-4">
+        <span className="text-sm font-medium text-foreground leading-4">Status</span>
+        <div className="flex flex-wrap gap-2">
+          {FILTER_STATUSES.map((s) => (
+            <FilterChip
+              key={s}
+              label={filterStatusLabels[s]}
+              selected={statusFilter === s}
+              onClick={() => onStatusChange(s)}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type SortField = "default" | "status";
+type SortOrder = "newest" | "oldest";
+type SortPrice = "low" | "high";
+
+const sortFieldLabels: Record<SortField, string> = { default: "Default", status: "Status" };
+
+function SortCheckIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0">
+      <path d="M2.5 6L5 8.5L9.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SortDropdown({
+  sortField,
+  sortOrder,
+  sortPrice,
+  onFieldChange,
+  onOrderChange,
+  onPriceChange,
+  onClose,
+}: {
+  sortField: SortField;
+  sortOrder: SortOrder;
+  sortPrice: SortPrice;
+  onFieldChange: (v: SortField) => void;
+  onOrderChange: (v: SortOrder) => void;
+  onPriceChange: (v: SortPrice) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [onClose]);
+
+  const menuItem = (label: string, selected: boolean, onClick: () => void) => (
+    <button
+      key={label}
+      onClick={() => { onClick(); }}
+      className="flex items-center gap-0 w-full h-6 px-1 rounded text-left hover:bg-accent transition-colors"
+    >
+      <span className="flex items-center justify-center w-6 shrink-0">
+        {selected && <SortCheckIcon />}
+      </span>
+      <span className="text-xs font-medium text-foreground leading-4">{label}</span>
+    </button>
+  );
+
+  return (
+    <div
+      ref={ref}
+      className="absolute right-0 top-full mt-1 z-50 w-full min-w-fit bg-popover border border-border rounded-lg shadow-lg animate-in fade-in slide-in-from-top-1 duration-150 overflow-hidden"
+    >
+      <div className="flex flex-col p-1 border-b border-border">
+        <div className="flex items-center h-7 px-3">
+          <span className="text-[13px] font-medium text-muted-foreground leading-5">Sort By</span>
+        </div>
+        {(["default", "status"] as SortField[]).map((f) =>
+          menuItem(sortFieldLabels[f], sortField === f, () => onFieldChange(f))
+        )}
+      </div>
+
+      <div className="flex flex-col p-1 border-b border-border">
+        <div className="flex items-center h-7 px-3">
+          <span className="text-[13px] font-medium text-muted-foreground leading-5">Order</span>
+        </div>
+        {menuItem("Newest First", sortOrder === "newest", () => onOrderChange("newest"))}
+        {menuItem("Oldest First", sortOrder === "oldest", () => onOrderChange("oldest"))}
+      </div>
+
+      <div className="flex flex-col p-1">
+        {menuItem("Price Low", sortPrice === "low", () => onPriceChange("low"))}
+        {menuItem("Price High", sortPrice === "high", () => onPriceChange("high"))}
+      </div>
+    </div>
+  );
+}
+
 function formatDownloads(n: number | null): string {
   if (n === null) return "-";
   if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`;
@@ -421,12 +646,37 @@ export default function UploadedContent() {
   const [menuOpenIndex, setMenuOpenIndex] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sheetModel, setSheetModel] = useState<UploadedModel | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+  const [sortField, setSortField] = useState<SortField>("default");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const [sortPrice, setSortPrice] = useState<SortPrice>("low");
+  const [formatFilter, setFormatFilter] = useState<FilterFormat>("all");
+  const [pricingFilter, setPricingFilter] = useState<FilterPricing>("all");
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
+  const formatsRef = useRef<HTMLDivElement>(null);
+  const [formatsWidth, setFormatsWidth] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const el = formatsRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setFormatsWidth(el.offsetWidth));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const closeMenu = useCallback(() => setMenuOpenIndex(null), []);
 
-  const filtered = uploadedData.filter((m) =>
-    m.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const hasActiveFilter = formatFilter !== "all" || pricingFilter !== "all" || statusFilter !== "all";
+
+  const filtered = uploadedData.filter((m) => {
+    if (!m.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (formatFilter !== "all" && !m.formats.includes(formatFilter)) return false;
+    if (pricingFilter === "free" && m.pricing !== "Free") return false;
+    if (pricingFilter === "paid" && m.pricing === "Free") return false;
+    if (statusFilter !== "all" && m.state !== statusFilter) return false;
+    return true;
+  });
 
   const filteredSelectedCount = useMemo(
     () => filtered.filter(m => selectedIds.has(m.id)).length,
@@ -473,11 +723,46 @@ export default function UploadedContent() {
       {/* Toolbar + Table Header (sticky) */}
       <div className="sticky top-0 z-30 bg-background">
         <div className="flex items-center justify-between px-4 lg:px-10 py-2">
-          <div className="flex flex-1 items-center gap-2">
-            <button className="flex items-center gap-0.5 h-8 px-2 py-1 border border-border rounded text-[13px] font-semibold text-foreground leading-4 whitespace-nowrap">
-              Filter
-              <ChevronDownIcon />
-            </button>
+          <div className="flex flex-1 items-center gap-2 relative">
+            <div className="relative">
+              <button
+                onClick={() => setFilterOpen(!filterOpen)}
+                className={`flex items-center gap-0.5 h-8 px-2 py-1 border rounded text-[13px] font-semibold leading-4 whitespace-nowrap transition-colors ${
+                  hasActiveFilter
+                    ? "border-grape-accent text-grape-accent bg-grape-accent/5 hover:bg-grape-accent/10 active:bg-grape-accent/15"
+                    : "border-border text-foreground hover:bg-accent active:bg-accent/80"
+                }`}
+              >
+                Filter
+                <ChevronDownIcon />
+              </button>
+              {hasActiveFilter && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFormatFilter("all");
+                    setPricingFilter("all");
+                    setStatusFilter("all");
+                  }}
+                  className="absolute -left-1 -top-[3px] flex items-center justify-center w-4 h-3 rounded bg-grape-accent hover:bg-grape-accent/80 transition-colors"
+                >
+                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                    <path d="M2 2L6 6M6 2L2 6" stroke="white" strokeWidth="1.25" strokeLinecap="round" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            {filterOpen && (
+              <FilterDropdown
+                formatFilter={formatFilter}
+                pricingFilter={pricingFilter}
+                statusFilter={statusFilter}
+                onFormatChange={setFormatFilter}
+                onPricingChange={setPricingFilter}
+                onStatusChange={setStatusFilter}
+                onClose={() => setFilterOpen(false)}
+              />
+            )}
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center w-[140px] bg-muted rounded px-1 py-1">
@@ -492,11 +777,27 @@ export default function UploadedContent() {
                 className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground leading-4 outline-none"
               />
             </div>
-            <button className="flex items-center gap-0.5 h-8 px-2 py-1 border border-border rounded text-[13px] leading-4 whitespace-nowrap">
-              <span className="text-muted-foreground">Sort by:</span>
-              <span className="font-semibold text-foreground"> Default</span>
-              <ChevronDownIcon />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setSortOpen(!sortOpen)}
+                className="flex items-center gap-0.5 h-8 px-2 py-1 border border-border rounded text-[13px] leading-4 whitespace-nowrap hover:bg-accent active:bg-accent/80 transition-colors"
+              >
+                <span className="text-muted-foreground">Sort by:</span>
+                <span className="font-semibold text-foreground"> {sortFieldLabels[sortField]}</span>
+                <ChevronDownIcon />
+              </button>
+              {sortOpen && (
+                <SortDropdown
+                  sortField={sortField}
+                  sortOrder={sortOrder}
+                  sortPrice={sortPrice}
+                  onFieldChange={setSortField}
+                  onOrderChange={setSortOrder}
+                  onPriceChange={setSortPrice}
+                  onClose={() => setSortOpen(false)}
+                />
+              )}
+            </div>
           </div>
         </div>
 
@@ -519,7 +820,10 @@ export default function UploadedContent() {
               Pricing
             </span>
           </div>
-          <div className="hidden xl:flex items-center w-[202px] shrink-0 p-4 border-b border-border">
+          <div
+            className="hidden xl:flex items-center shrink-0 p-4 border-b border-border"
+            style={formatsWidth ? { width: formatsWidth } : undefined}
+          >
             <span className="text-[13px] font-semibold text-muted-foreground leading-[18px] whitespace-nowrap">
               Formats
             </span>
@@ -598,7 +902,7 @@ export default function UploadedContent() {
             </div>
 
             {/* Formats */}
-            <div className="hidden xl:flex items-center w-[202px] shrink-0 px-4">
+            <div ref={index === 0 ? formatsRef : undefined} className="hidden xl:flex items-center w-fit shrink-0 px-4">
               <div className="flex flex-wrap gap-1">
                 {model.formats.map((fmt) => (
                   <FormatBadge key={fmt} format={fmt} />

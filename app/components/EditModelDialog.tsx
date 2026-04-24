@@ -1142,7 +1142,7 @@ export default function EditModelDialog({ title = "Upload", modelName, onClose }
           <>
           <div className="fixed inset-0 z-40" onClick={() => setShowGuidelinesPopover(false)} />
           <div className="absolute top-14 right-2 z-50 w-[480px] animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
-            <div className="bg-foreground text-background rounded-lg p-5 shadow-2xl max-h-[60vh] overflow-y-auto">
+            <div className="bg-foreground text-background rounded-lg p-5 shadow-2xl">
               <p className="text-[14px] font-semibold leading-5">Review Guidelines</p>
               <p className="text-[12px] opacity-70 leading-4 mt-2">
                 For uploaded source files (.d5a, .skp, .obj, .fbx, .max), you must upload a matching workspace screenshot in the &quot;Image Upload&quot; section below. Missing or wrong proof images will to rejection.
