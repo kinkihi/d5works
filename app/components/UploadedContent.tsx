@@ -302,7 +302,6 @@ function FilterDropdown({
   onFormatChange,
   onPricingChange,
   onStatusChange,
-  onReset,
   onClose,
 }: {
   formatFilter: FilterFormat;
