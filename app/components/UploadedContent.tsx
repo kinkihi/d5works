@@ -12,15 +12,17 @@ interface UploadedModel {
   formats: string[];
   state: ModelState;
   downloads: number | null;
+  weeklyDownloads?: number | null;
+  downloadTrend?: "up" | "down" | null;
 }
 
 const uploadedData: UploadedModel[] = [
-  { name: "Modern Dining Room", id: "7NK512RTG8PQ", pricing: "$9.90", formats: [".d5a", ".skp", ".max", ".fbx", ".obj"], state: "pending", downloads: null },
+  { name: "Modern Dining Room", id: "7NK512RTG8PQ", pricing: "$9.90", formats: [".d5a", ".skp", ".max", ".fbx", ".obj"], state: "pending", downloads: 1245, weeklyDownloads: 12, downloadTrend: "up" },
   { name: "Cozy Creative Studio", id: "8BM623SUH9QR", pricing: "$9.90", formats: [".d5a", ".skp", ".max", ".fbx", ".obj"], state: "draft", downloads: null },
-  { name: "Minimalist Living Space", id: "3KL847VWI2ST", pricing: "$9.90", formats: [".d5a", ".skp", ".max", ".fbx", ".obj"], state: "published", downloads: 2100 },
-  { name: "Industrial Loft Design", id: "5PN936XYJ4UV", pricing: "$9.90", formats: [".d5a", ".skp", ".max", ".fbx", ".obj"], state: "rejected", downloads: 30 },
-  { name: "Scandinavian Bedroom", id: "9DQ158ZAK6WX", pricing: "$9.90", formats: [".d5a", ".skp", ".max", ".fbx", ".obj"], state: "suppressed", downloads: 30 },
-  { name: "Art Deco Bathroom", id: "2FR269BLC7YZ", pricing: "$9.90", formats: [".d5a", ".skp", ".max", ".fbx", ".obj"], state: "unpublished", downloads: 10 },
+  { name: "Minimalist Living Space", id: "3KL847VWI2ST", pricing: "$9.90", formats: [".d5a", ".skp", ".max", ".fbx", ".obj"], state: "published", downloads: 2100, weeklyDownloads: 12, downloadTrend: "up" },
+  { name: "Industrial Loft Design", id: "5PN936XYJ4UV", pricing: "$9.90", formats: [".d5a", ".skp", ".max", ".fbx", ".obj"], state: "rejected", downloads: 30, weeklyDownloads: 12, downloadTrend: "up" },
+  { name: "Scandinavian Bedroom", id: "9DQ158ZAK6WX", pricing: "$9.90", formats: [".d5a", ".skp", ".max", ".fbx", ".obj"], state: "suppressed", downloads: 30, weeklyDownloads: 12, downloadTrend: "up" },
+  { name: "Art Deco Bathroom", id: "2FR269BLC7YZ", pricing: "$9.90", formats: [".d5a", ".skp", ".max", ".fbx", ".obj"], state: "unpublished", downloads: 10, weeklyDownloads: 12, downloadTrend: "up" },
 ];
 
 function SearchIcon() {
@@ -46,6 +48,15 @@ function MoreIcon() {
       <circle cx="8" cy="3" r="1.25" fill="currentColor" />
       <circle cx="8" cy="8" r="1.25" fill="currentColor" />
       <circle cx="8" cy="13" r="1.25" fill="currentColor" />
+    </svg>
+  );
+}
+
+function ChartPieIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className="shrink-0 text-muted-foreground">
+      <path d="M8 2V8H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   );
 }
@@ -832,7 +843,7 @@ export default function UploadedContent() {
               State
             </span>
           </div>
-          <div className="hidden sm:flex items-center w-[120px] shrink-0 p-4 border-b border-border">
+          <div className="hidden sm:flex items-center w-[164px] shrink-0 p-4 border-b border-border">
             <span className="text-[13px] font-semibold text-muted-foreground leading-[18px] whitespace-nowrap">
               Downloads
             </span>
@@ -915,10 +926,37 @@ export default function UploadedContent() {
             </div>
 
             {/* Downloads */}
-            <div className="hidden sm:flex items-center w-[120px] shrink-0 px-4">
-              <span className="text-[13px] font-normal text-foreground leading-[18px]">
-                {formatDownloads(model.downloads)}
-              </span>
+            <div className="hidden sm:flex items-center w-[164px] shrink-0 px-4">
+              {model.downloads != null ? (
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[13px] font-medium text-foreground leading-4">
+                      {formatDownloads(model.downloads)}
+                    </span>
+                    <ChartPieIcon />
+                  </div>
+                  {model.weeklyDownloads != null && (
+                    <div className="flex items-center gap-2 leading-5">
+                      <span className="text-[11px] font-normal text-foreground/60">
+                        Recent 7 days
+                      </span>
+                      <div className="flex items-center gap-1 text-xs">
+                        <span className="font-medium text-foreground">
+                          {model.weeklyDownloads}
+                        </span>
+                        {model.downloadTrend === "up" && (
+                          <span className="font-semibold text-emerald-500">↑</span>
+                        )}
+                        {model.downloadTrend === "down" && (
+                          <span className="font-semibold text-red-500">↓</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <span className="text-xs font-medium text-foreground leading-5">-</span>
+              )}
             </div>
 
             {/* More */}

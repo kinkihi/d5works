@@ -897,6 +897,9 @@ export default function EditModelDialog({ title = "Upload", modelName, onClose }
   const [tagInput, setTagInput] = useState("");
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [nameError, setNameError] = useState("");
+  const [descError, setDescError] = useState("");
+  const [submitted, setSubmitted] = useState(false);
   const isEdit = title === "Edit";
   const [modelFiles, setModelFiles] = useState(
     isEdit
@@ -937,6 +940,26 @@ export default function EditModelDialog({ title = "Upload", modelName, onClose }
     isEdit ? "collapsed" : "banner"
   );
   const [showGuidelinesPopover, setShowGuidelinesPopover] = useState(false);
+
+  const validateName = useCallback((value: string) => {
+    if (!value.trim()) return "Name is required";
+    if (/[^\x00-\x7F]/.test(value)) return "Only English characters are allowed";
+    if (value.length > 100) return `Name must be 100 characters or less (${value.length}/100)`;
+    return "";
+  }, []);
+
+  const validateDescription = useCallback((value: string) => {
+    if (value.length > 1500) return `Description must be 1,500 characters or less (${value.length}/1500)`;
+    return "";
+  }, []);
+
+  const validateAll = useCallback(() => {
+    const nErr = validateName(name);
+    const dErr = validateDescription(description);
+    setNameError(nErr);
+    setDescError(dErr);
+    return !nErr && !dErr;
+  }, [name, description, validateName, validateDescription]);
 
   const autoFillOnFirstUpload = useCallback(() => {
     if (hasAutoFilled.current) return;
@@ -1281,17 +1304,35 @@ export default function EditModelDialog({ title = "Upload", modelName, onClose }
               <div>
                 <FieldLabel label="Name" required />
                 <p className="text-[13px] text-muted-foreground leading-4 mt-1">
-                  English only. Up to 60 characters.
+                  English only. Up to 100 characters.
                 </p>
               </div>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={60}
-                placeholder="your model name"
-                className="w-full h-10 px-2 bg-black/[0.03] dark:bg-white/[0.03] border border-transparent rounded-lg text-[13px] text-foreground placeholder:text-muted-foreground/60 leading-4 outline-none transition-colors focus:border-grape-accent focus:ring-2 focus:ring-grape-accent/20"
-              />
+              <div className="flex flex-col gap-1">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (submitted) setNameError(validateName(e.target.value));
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      setSubmitted(true);
+                      validateAll();
+                    }
+                  }}
+                  placeholder="your model name"
+                  className={`w-full h-10 px-2 bg-black/[0.03] dark:bg-white/[0.03] border rounded-lg text-[13px] text-foreground placeholder:text-muted-foreground/60 leading-4 outline-none transition-colors ${
+                    nameError
+                      ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+                      : "border-transparent focus:border-grape-accent focus:ring-2 focus:ring-grape-accent/20"
+                  }`}
+                />
+                {nameError && (
+                  <p className="text-xs text-red-500 leading-4">{nameError}</p>
+                )}
+              </div>
             </div>
 
             {/* Category & Style */}
@@ -1309,12 +1350,36 @@ export default function EditModelDialog({ title = "Upload", modelName, onClose }
             {/* Description */}
             <div className="flex flex-col gap-2">
               <FieldLabel label="Description" />
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe the model's key features, style and intended use."
-                className="w-full h-20 px-2 py-2 bg-black/[0.03] dark:bg-white/[0.03] border border-transparent rounded-lg text-[13px] text-foreground placeholder:text-muted-foreground/60 leading-4 outline-none transition-colors focus:border-grape-accent focus:ring-2 focus:ring-grape-accent/20 resize-none"
-              />
+              <div className="flex flex-col gap-1">
+                <textarea
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    if (submitted) setDescError(validateDescription(e.target.value));
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      setSubmitted(true);
+                      validateAll();
+                    }
+                  }}
+                  placeholder="Describe the model's key features, style and intended use."
+                  className={`w-full h-20 px-2 py-2 bg-black/[0.03] dark:bg-white/[0.03] border rounded-lg text-[13px] text-foreground placeholder:text-muted-foreground/60 leading-4 outline-none transition-colors resize-none ${
+                    descError
+                      ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+                      : "border-transparent focus:border-grape-accent focus:ring-2 focus:ring-grape-accent/20"
+                  }`}
+                />
+                <div className="flex items-center justify-between">
+                  {descError ? (
+                    <p className="text-xs text-red-500 leading-4">{descError}</p>
+                  ) : <span />}
+                  <span className={`text-xs leading-4 ${description.length > 1500 ? "text-red-500" : "text-muted-foreground/40"}`}>
+                    {description.length}/1500
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Tags */}
@@ -1534,7 +1599,19 @@ export default function EditModelDialog({ title = "Upload", modelName, onClose }
             <button className="flex items-center justify-center h-10 px-4 border border-border rounded text-sm font-semibold text-foreground hover:bg-accent transition-colors">
               Save as draft
             </button>
-            <button className="flex items-center justify-center h-10 px-4 bg-grape-accent rounded text-sm font-semibold text-white opacity-30 cursor-not-allowed">
+            <button
+              disabled={!modelFiles.some(f => f.status === "uploaded") || modelImages.length === 0}
+              onClick={() => {
+                setSubmitted(true);
+                if (!validateAll()) return;
+                // TODO: handle actual submission
+              }}
+              className={`flex items-center justify-center h-10 px-4 bg-grape-accent rounded text-sm font-semibold text-white transition-colors ${
+                !modelFiles.some(f => f.status === "uploaded") || modelImages.length === 0
+                  ? "opacity-30 cursor-not-allowed"
+                  : "hover:bg-grape-accent/90"
+              }`}
+            >
               Submit
             </button>
           </div>
